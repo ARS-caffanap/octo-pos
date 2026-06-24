@@ -30,6 +30,9 @@ export default function DashboardPage() {
           <Button asChild variant="outline">
             <Link href="/inventory">Inventory</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href="/products">Products</Link>
+          </Button>
           <Button asChild>
             <Link href="/pos">Open POS</Link>
           </Button>
