@@ -26,9 +26,14 @@ export default function DashboardPage() {
     <main className="mx-auto max-w-3xl space-y-6 p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <Button asChild>
-          <Link href="/pos">Open POS</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/inventory">Inventory</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/pos">Open POS</Link>
+          </Button>
+        </div>
       </div>
       <Card>
         <CardHeader>
