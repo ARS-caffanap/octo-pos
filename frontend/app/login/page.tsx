@@ -2,6 +2,10 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,25 +15,54 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TOKEN_COOKIE } from "@/lib/api";
+import { LoginError, login } from "@/lib/auth";
 
-// PONYTAIL: this is a stub. The real auth flow lands with OCT-6
-// (backend). For now we just need a working cookie so the middleware
-// can let users past the gate.
+// Validation runs client-side before submit. The backend re-validates;
+// this just gives the user fast feedback and prevents a round-trip on
+// obvious mistakes.
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [token, setToken] = useState("");
-  const next = params.get("next") ?? "/dashboard";
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (token.split(".").length !== 3) return;
-    // 7 days; the backend's exp claim is the source of truth.
-    document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax`;
-    router.push(next);
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  async function onSubmit(values: LoginValues) {
+    setSubmitting(true);
+    try {
+      await login(values.email, values.password);
+      const next = params.get("next") ?? "/dashboard";
+      router.push(next);
+      router.refresh();
+    } catch (err) {
+      const message =
+        err instanceof LoginError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Login failed";
+      toast.error(message);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -37,27 +70,55 @@ function LoginForm() {
       <CardHeader>
         <CardTitle>Sign in to OctoPOS</CardTitle>
         <CardDescription>
-          Paste a JWT (real login lands with OCT-6).
+          Enter your work email and password to continue.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-2">
-          <Label htmlFor="token">JWT</Label>
-          <Input
-            id="token"
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="eyJhbGciOi..."
-            required
-          />
-        </CardContent>
-        <CardFooter className="pt-2">
-          <Button type="submit" className="w-full">
-            Continue
-          </Button>
-        </CardFooter>
-      </form>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+          <CardFooter className="pt-2">
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }
