@@ -1,0 +1,73 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API for OctoPOS — a point-of-sale and inventory management system.\nThis API provides endpoints for authentication, product management,\ntransaction processing, and inventory tracking.",
+        "title": "OctoPOS API",
+        "contact": {
+            "name": "OctoPOS Team",
+            "email": "dev@octopos.example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Returns 200 OK when the service is running. Used by load balancers and monitoring tools.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "status: ok",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and the JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "tags": [
+        {
+            "description": "Health check endpoints",
+            "name": "Health"
+        },
+        {
+            "description": "Authentication and authorization endpoints",
+            "name": "Auth"
+        },
+        {
+            "description": "Product management endpoints",
+            "name": "Products"
+        },
+        {
+            "description": "Transaction processing endpoints",
+            "name": "Transactions"
+        },
+        {
+            "description": "Inventory tracking endpoints",
+            "name": "Inventory"
+        }
+    ]
+}

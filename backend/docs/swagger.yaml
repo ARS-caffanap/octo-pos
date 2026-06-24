@@ -1,0 +1,50 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact:
+    email: dev@octopos.example.com
+    name: OctoPOS Team
+  description: |-
+    REST API for OctoPOS — a point-of-sale and inventory management system.
+    This API provides endpoints for authentication, product management,
+    transaction processing, and inventory tracking.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: OctoPOS API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Returns 200 OK when the service is running. Used by load balancers
+        and monitoring tools.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'status: ok'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+tags:
+- description: Health check endpoints
+  name: Health
+- description: Authentication and authorization endpoints
+  name: Auth
+- description: Product management endpoints
+  name: Products
+- description: Transaction processing endpoints
+  name: Transactions
+- description: Inventory tracking endpoints
+  name: Inventory
