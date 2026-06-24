@@ -25,10 +25,28 @@ octo-pos/
 │   ├── go.mod
 │   └── go.sum
 ├── frontend/                    # Next.js app (OCT-10)
+│   ├── app/
+│   │   ├── dashboard/           # Landing + nav (OCT-11)
+│   │   ├── inventory/           # Stock list (OCT-6)
+│   │   ├── products/            # Catalog CRUD (OCT-12)
+│   │   └── pos/                 # Point-of-Sale transaction screen (OCT-13)
+│   ├── components/
+│   │   └── pos/                 # Product search, cart, checkout dialogs
+│   └── lib/                     # api / auth / products / transactions
 ├── docker-compose.yml           # PostgreSQL container
 ├── package.json                 # npm workspaces root
 └── README.md
 ```
+
+## Features
+
+- **Inventory** — list, filter, and adjust stock for the active catalog.
+- **Products** — full CRUD for catalog items (name, SKU, price, stock,
+  threshold, category, status).
+- **Point of Sale** (`/pos`) — searchable product picker, in-memory cart
+  with stock-aware quantity controls, configurable tax, and a checkout
+  dialog that records the sale via `POST /api/transactions`. Supports
+  cash (with change-due calculation) and card payment methods.
 
 ## Quick Start
 
