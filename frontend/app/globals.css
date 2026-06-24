@@ -90,3 +90,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print rules for the receipt component (OCT-14). Goal: when the user
+ * triggers window.print() from the receipt footer, the only thing on paper
+ * is the receipt card — no nav, no copy/print buttons, no shadows. */
+@media print {
+  /* Hide everything that isn't the receipt card itself. */
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-root,
+  .receipt-root * {
+    visibility: visible;
+  }
+
+  .receipt-root {
+    position: absolute;
+    inset: 0;
+    margin: 0 auto;
+    max-width: 100%;
+    border: none;
+    box-shadow: none;
+    background: white;
+    color: black;
+  }
+
+  .receipt-actions,
+  .receipt-header svg,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}
