@@ -16,6 +16,10 @@ frontend/.next/
 frontend/out/
 frontend/build/
 
+# Root (npm workspaces hoists deps here too)
+node_modules/
+package-lock.json
+
 # OS
 .DS_Store
 Thumbs.db
