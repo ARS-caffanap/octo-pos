@@ -1,6 +1,60 @@
-backend/bin/
-backend/tmp/
-frontend/node_modules/
-frontend/.next/
+# ── Git ──────────────────────────────────────────────────
 .git
+.gitignore
+.gitattributes
+
+# ── Docker ───────────────────────────────────────────────
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# ── Node / Frontend ──────────────────────────────────────
+node_modules
+.npm
+.pnp
+.pnp.js
+frontend/.next
+frontend/out
+frontend/build
+frontend/node_modules
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Go / Backend ─────────────────────────────────────────
+backend/vendor
+*.exe
+*.test
+*.out
+backend/tmp
+
+# ── Environment ──────────────────────────────────────────
 .env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+
+# ── IDE / Editor ─────────────────────────────────────────
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# ── OS ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── CI / Test ────────────────────────────────────────────
+coverage
+.nyc_output
+
+# ── Misc ─────────────────────────────────────────────────
+*.log
+*.pid
+*.seed
+tmp
+temp
+README.md
+DEPLOY.md
+AGENTS.md
