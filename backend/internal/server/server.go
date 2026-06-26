@@ -7,6 +7,7 @@ import (
 	"github.com/ARS-caffanap/octo-pos/backend/internal/database"
 	"github.com/ARS-caffanap/octo-pos/backend/internal/handlers"
 	"github.com/ARS-caffanap/octo-pos/backend/internal/middleware"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/ARS-caffanap/octo-pos/backend/docs" // swagger docs
@@ -21,6 +22,16 @@ func New(cfg *config.Config) *gin.Engine {
 	}
 
 	r := gin.Default()
+
+	// CORS middleware — allow frontend origin + preflight (OPTIONS)
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"https://octopos.choirulaffan.dev", "http://localhost:3000", "http://localhost:3232"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}))
 
 	// Health check (no auth required)
 	r.GET("/health", handlers.Health)

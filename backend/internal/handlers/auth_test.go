@@ -56,8 +56,8 @@ func TestLogin_MissingFields(t *testing.T) {
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
 
-			if w.Code != http.StatusBadRequest {
-				t.Errorf("expected 400, got %d", w.Code)
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("expected 401, got %d", w.Code)
 			}
 		})
 	}

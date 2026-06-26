@@ -32,15 +32,14 @@ func NewAuthHandler(cfg *config.Config, userRepo *database.UserRepo) *AuthHandle
 //	@Produce		json
 //	@Param			request	body		models.LoginRequest	true	"Login credentials"
 //	@Success		200		{object}	models.LoginResponse
-//	@Failure		400		{object}	models.AuthErrorResponse
-//	@Failure		401		{object}	models.AuthErrorResponse
+//	@Failure	401		{object}	models.AuthErrorResponse
 //	@Router			/api/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.AuthErrorResponse{
-			Error:   "validation_error",
-			Message: err.Error(),
+		c.JSON(http.StatusUnauthorized, models.AuthErrorResponse{
+			Error:   "unauthorized",
+			Message: "invalid email or password",
 		})
 		return
 	}
