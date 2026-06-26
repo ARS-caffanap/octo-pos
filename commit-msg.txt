@@ -1,0 +1,12 @@
+feat: implement JWT-based auth with login endpoint
+
+- Add tenants and users tables with UUID PKs, FK, bcrypt password_hash
+- Create UserRepo (FindByEmail, Create) with raw SQL
+- Add POST /api/auth/login endpoint: validates email+password, bcrypt-compare,
+  issues HS256 JWT with tenant_id/user_id/role/email claims
+- Seed default tenant + admin user (admin@octopos.local / admin123)
+- Fix frontend api.ts: read token from localStorage (was reading from cookie)
+- Fix auth.ts: also set cookie on login so Next.js middleware works
+- Add 6 auth handler tests plus JWT-middleware compatibility test
+
+All 16 tests pass.

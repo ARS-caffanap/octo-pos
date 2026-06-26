@@ -1,14 +1,10 @@
 // Minimal API helper. PONYTAIL: one file, no abstractions.
-// Reads the JWT from the cookie the middleware also reads, so the
-// Authorization header is set automatically for every call.
-export const TOKEN_COOKIE = "octopos_token";
+// Reads the JWT from localStorage (set by auth.ts on login) and
+// sends it as an Authorization header on every request.
 
-export function getTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${TOKEN_COOKIE}=`));
-  return match ? decodeURIComponent(match.split("=")[1]) : null;
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem("token");
 }
 
 export async function api<T = unknown>(
@@ -16,7 +12,7 @@ export async function api<T = unknown>(
   init: RequestInit = {},
 ): Promise<T> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-  const token = getTokenFromCookie();
+  const token = getToken();
   const res = await fetch(`${base}${path}`, {
     ...init,
     headers: {

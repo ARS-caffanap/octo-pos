@@ -34,14 +34,24 @@ func New(cfg *config.Config) *gin.Engine {
 	} else {
 		if err := database.Migrate(); err != nil {
 			log.Printf("WARNING: database migration failed: %v", err)
+		} else {
+			// Seed dev data (idempotent — safe to call repeatedly).
+			if err := database.SeedDefaultTenantAndAdmin(); err != nil {
+				log.Printf("WARNING: seed failed: %v", err)
+			}
 		}
 	}
 
 	// Repositories
 	productRepo := database.NewProductRepo(database.DB)
+	userRepo := database.NewUserRepo(database.DB)
 
 	// Handlers
 	productsHandler := handlers.NewProductsHandler(productRepo)
+	authHandler := handlers.NewAuthHandler(cfg, userRepo)
+
+	// Public auth routes (no middleware)
+	r.POST("/api/auth/login", authHandler.Login)
 
 	// API v1 group (protected routes)
 	api := r.Group("/api/v1")

@@ -59,6 +59,10 @@ export async function login(email: string, password: string): Promise<string> {
 
   if (typeof window !== "undefined") {
     window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    // Also set as cookie so Next.js middleware can read it for route gating.
+    // Expires in 1 day (matching backend token TTL).
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `octopos_token=${encodeURIComponent(token)}; expires=${expires}; path=/; SameSite=Lax`;
   }
   return token;
 }
@@ -66,4 +70,6 @@ export async function login(email: string, password: string): Promise<string> {
 export function clearStoredToken(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  // Clear the cookie too.
+  document.cookie = "octopos_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
 }
