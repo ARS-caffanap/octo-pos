@@ -44,6 +44,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Validate password length AFTER binding to prevent information disclosure.
+	// If we validated at the struct-tag level, Gin would return a different
+	// error (400 vs 401), leaking password policy to attackers.
+	if len(req.Password) < 6 {
+		c.JSON(http.StatusUnauthorized, models.AuthErrorResponse{
+			Error:   "unauthorized",
+			Message: "invalid email or password",
+		})
+		return
+	}
+
 	user, err := h.userRepo.FindByEmail(req.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.AuthErrorResponse{

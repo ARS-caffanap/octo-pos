@@ -1,9 +1,13 @@
 package models
 
 // LoginRequest is the payload for POST /api/auth/login.
+// Password length is NOT validated at the binding level to prevent
+// information disclosure (attackers could infer password policy from
+// different error responses). Validation happens inside the handler
+// after the user lookup, so all auth failures return identical 401.
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Password string `json:"password" binding:"required"`
 }
 
 // LoginResponse is returned on successful authentication.
