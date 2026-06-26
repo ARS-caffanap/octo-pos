@@ -22,6 +22,9 @@ func New(cfg *config.Config) *gin.Engine {
 
 	r := gin.Default()
 
+	// Global security headers — applied to every response.
+	r.Use(middleware.SecurityHeaders())
+
 	// Health check (no auth required)
 	r.GET("/health", handlers.Health)
 
