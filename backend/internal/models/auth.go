@@ -24,6 +24,7 @@ type UserInfo struct {
 
 // AuthErrorResponse is a generic auth error response.
 type AuthErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message"`
+	Error      string `json:"error"`
+	Message    string `json:"message"`
+	RetryAfter int    `json:"retry_after,omitempty"`
 }
