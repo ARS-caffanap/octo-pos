@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/ARS-caffanap/octo-pos/backend/internal/config"
@@ -56,11 +57,116 @@ func TestLogin_MissingFields(t *testing.T) {
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
 
-		if w.Code != http.StatusUnauthorized {
-			t.Errorf("expected 401, got %d", w.Code)
+			if w.Code != http.StatusBadRequest {
+				t.Errorf("expected 400, got %d", w.Code)
 			}
 		})
 	}
+}
+
+func TestLogin_ValidationErrorShape(t *testing.T) {
+	r, _ := setupAuthTest()
+
+	tests := []struct {
+		name              string
+		body              gin.H
+		expectedField     string
+		expectedMsgSubstr string
+		disallowedPhrases []string
+	}{
+		{
+			name:              "empty body",
+			body:              gin.H{},
+			expectedField:     "email",
+			expectedMsgSubstr: "required",
+			disallowedPhrases: []string{"LoginRequest", "Key:", "min", "Email"},
+		},
+		{
+			name:              "missing password",
+			body:              gin.H{"email": "test@example.com"},
+			expectedField:     "password",
+			expectedMsgSubstr: "required",
+			disallowedPhrases: []string{"LoginRequest", "Key:", "min", "Password"},
+		},
+		{
+			name:              "missing email",
+			body:              gin.H{"password": "password123"},
+			expectedField:     "email",
+			expectedMsgSubstr: "required",
+			disallowedPhrases: []string{"LoginRequest", "Key:", "min", "Email"},
+		},
+		{
+			name:              "invalid email format",
+			body:              gin.H{"email": "not-an-email", "password": "password123"},
+			expectedField:     "email",
+			expectedMsgSubstr: "valid email",
+			disallowedPhrases: []string{"LoginRequest", "Key:", "min", "Email", "Password"},
+		},
+		{
+			name:              "short password",
+			body:              gin.H{"email": "test@example.com", "password": "12345"},
+			expectedField:     "password",
+			expectedMsgSubstr: "at least 6",
+			disallowedPhrases: []string{"LoginRequest", "Key:", "min", "Email", "Password"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, _ := json.Marshal(tt.body)
+			req, _ := http.NewRequest("POST", "/api/auth/login", bytes.NewReader(b))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
+
+			if w.Code != http.StatusBadRequest {
+				t.Errorf("expected 400, got %d", w.Code)
+			}
+
+			body := w.Body.String()
+
+			// Check no internal details leak
+			for _, phrase := range tt.disallowedPhrases {
+				if strings.Contains(body, phrase) {
+					t.Errorf("response leaks internal detail '%s': %s", phrase, body)
+				}
+			}
+
+			// Parse JSON and verify structure
+			var parsed map[string]interface{}
+			if err := json.Unmarshal(w.Body.Bytes(), &parsed); err != nil {
+				t.Fatalf("response is not valid JSON: %s", body)
+			}
+
+			if parsed["error"] != "validation_error" {
+				t.Errorf("expected error='validation_error', got %v", parsed["error"])
+			}
+
+			errors, ok := parsed["errors"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected 'errors' map in response, got: %s", body)
+			}
+
+			if _, exists := errors[tt.expectedField]; !exists {
+				t.Errorf("expected field '%s' in errors map, got keys: %v", tt.expectedField, keysOf(errors))
+			}
+
+			if msg, ok := errors[tt.expectedField].(string); ok {
+				if !strings.Contains(msg, tt.expectedMsgSubstr) {
+					t.Errorf("expected message containing '%s', got '%s'", tt.expectedMsgSubstr, msg)
+				}
+			}
+		})
+	}
+}
+
+// keysOf returns keys of a map for error reporting.
+func keysOf(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func TestLogin_ConfigSetup(t *testing.T) {

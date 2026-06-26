@@ -1,13 +1,17 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ARS-caffanap/octo-pos/backend/internal/config"
 	"github.com/ARS-caffanap/octo-pos/backend/internal/database"
 	"github.com/ARS-caffanap/octo-pos/backend/internal/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -37,10 +41,7 @@ func NewAuthHandler(cfg *config.Config, userRepo *database.UserRepo) *AuthHandle
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnauthorized, models.AuthErrorResponse{
-			Error:   "unauthorized",
-			Message: "invalid email or password",
-		})
+		c.JSON(http.StatusBadRequest, mapValidationError(err))
 		return
 	}
 
@@ -99,4 +100,34 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			TenantID: user.TenantID,
 		},
 	})
+}
+
+// mapValidationError converts raw validator errors into a user-friendly response.
+// It never exposes Go struct field names or validator tag names to the client.
+func mapValidationError(err error) gin.H {
+	var ve validator.ValidationErrors
+	if errors.As(err, &ve) {
+		errs := make(map[string]string)
+		for _, e := range ve {
+			field := strings.ToLower(e.Field())
+			switch e.Tag() {
+			case "required":
+				errs[field] = field + " is required"
+			case "email":
+				errs[field] = "must be a valid email address"
+			case "min":
+				errs[field] = fmt.Sprintf("must be at least %s characters", e.Param())
+			default:
+				errs[field] = field + " is invalid"
+			}
+		}
+		return gin.H{
+			"error":  "validation_error",
+			"errors": errs,
+		}
+	}
+	return gin.H{
+		"error":   "validation_error",
+		"message": "invalid request body",
+	}
 }
