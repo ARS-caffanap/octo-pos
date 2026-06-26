@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -40,6 +42,11 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
+  // Form-level error that stays visible until the next submit attempt.
+  // A toast alone is not enough: it auto-dismisses and some users miss it,
+  // leading to repeat clicks and confusion. A persistent banner next to
+  // the form makes the failure impossible to miss.
+  const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -48,6 +55,8 @@ function LoginForm() {
 
   async function onSubmit(values: LoginValues) {
     setSubmitting(true);
+    // Clear any previous error so a retry feels fresh.
+    setFormError(null);
     try {
       await login(values.email, values.password);
       const next = params.get("next") ?? "/dashboard";
@@ -60,6 +69,7 @@ function LoginForm() {
           : err instanceof Error
             ? err.message
             : "Login failed";
+      setFormError(message);
       toast.error(message);
       setSubmitting(false);
     }
@@ -76,6 +86,12 @@ function LoginForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
           <CardContent className="space-y-4">
+            {formError && (
+              <Alert variant="destructive" role="alert" aria-live="polite">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
             <FormField
               control={form.control}
               name="email"
@@ -87,6 +103,7 @@ function LoginForm() {
                       type="email"
                       autoComplete="email"
                       placeholder="you@example.com"
+                      aria-invalid={form.formState.errors.email ? "true" : "false"}
                       {...field}
                     />
                   </FormControl>
@@ -104,6 +121,7 @@ function LoginForm() {
                     <Input
                       type="password"
                       autoComplete="current-password"
+                      aria-invalid={form.formState.errors.password ? "true" : "false"}
                       {...field}
                     />
                   </FormControl>

@@ -26,11 +26,26 @@ function extractToken(body: unknown): string {
 
 export async function login(email: string, password: string): Promise<string> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-  const res = await fetch(`${base}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${base}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (e) {
+    // fetch() throws TypeError on network failure / CORS rejection /
+    // DNS failure / offline. The browser swallows the underlying reason
+    // (this is a browser security policy, not a bug we can fix), so the
+    // best we can do is surface a clear, user-actionable message instead
+    // of the raw "Failed to fetch" string.
+    const isOffline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
+    const message = isOffline
+      ? "You appear to be offline. Check your connection and try again."
+      : "Couldn't reach the server. Please try again.";
+    throw new LoginError(message, 0);
+  }
 
   let body: unknown = null;
   // Parse body once; tolerate empty/non-JSON so we can still produce a
