@@ -73,7 +73,17 @@ func TestLogin_ConfigSetup(t *testing.T) {
 
 func TestLoginResponse_Shape(t *testing.T) {
 	// Verify the LoginResponse JSON shape matches what the frontend expects.
-	resp := models.LoginResponse{Token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.rTCH8cLoGxAm_xw68z-zXVKi9ie6xJn9tnVWjd_9ftE"}
+	resp := models.LoginResponse{
+		AccessToken: "eyJhbG...9ftE",
+		TokenType:   "Bearer",
+		ExpiresIn:   86400,
+		User: models.UserInfo{
+			ID:       "user-123",
+			Email:    "admin@example.com",
+			Role:     "admin",
+			TenantID: "tenant-456",
+		},
+	}
 	b, _ := json.Marshal(resp)
 
 	var parsed map[string]interface{}
@@ -81,8 +91,30 @@ func TestLoginResponse_Shape(t *testing.T) {
 		t.Fatalf("failed to parse LoginResponse JSON: %v", err)
 	}
 
-	if _, ok := parsed["token"]; !ok {
-		t.Errorf("LoginResponse missing 'token' field: %s", string(b))
+	if _, ok := parsed["access_token"]; !ok {
+		t.Errorf("LoginResponse missing 'access_token' field: %s", string(b))
+	}
+	if parsed["token_type"] != "Bearer" {
+		t.Errorf("expected token_type='Bearer', got %v", parsed["token_type"])
+	}
+	if parsed["expires_in"] != float64(86400) {
+		t.Errorf("expected expires_in=86400, got %v", parsed["expires_in"])
+	}
+	user, ok := parsed["user"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("LoginResponse missing or invalid 'user' field: %s", string(b))
+	}
+	if user["id"] != "user-123" {
+		t.Errorf("expected user.id='user-123', got %v", user["id"])
+	}
+	if user["email"] != "admin@example.com" {
+		t.Errorf("expected user.email='admin@example.com', got %v", user["email"])
+	}
+	if user["role"] != "admin" {
+		t.Errorf("expected user.role='admin', got %v", user["role"])
+	}
+	if user["tenant_id"] != "tenant-456" {
+		t.Errorf("expected user.tenant_id='tenant-456', got %v", user["tenant_id"])
 	}
 }
 

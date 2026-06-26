@@ -8,7 +8,18 @@ type LoginRequest struct {
 
 // LoginResponse is returned on successful authentication.
 type LoginResponse struct {
-	Token string `json:"token"`
+	AccessToken string   `json:"access_token"`
+	TokenType   string   `json:"token_type"`
+	ExpiresIn   int      `json:"expires_in"`
+	User        UserInfo `json:"user"`
+}
+
+// UserInfo is the user payload included in the login response.
+type UserInfo struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	TenantID string `json:"tenant_id"`
 }
 
 // AuthErrorResponse is a generic auth error response.

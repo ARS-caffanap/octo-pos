@@ -88,5 +88,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, models.LoginResponse{Token: signed})
+	c.JSON(http.StatusOK, models.LoginResponse{
+		AccessToken: signed,
+		TokenType:   "Bearer",
+		ExpiresIn:   86400,
+		User: models.UserInfo{
+			ID:       user.ID,
+			Email:    user.Email,
+			Role:     user.Role,
+			TenantID: user.TenantID,
+		},
+	})
 }
